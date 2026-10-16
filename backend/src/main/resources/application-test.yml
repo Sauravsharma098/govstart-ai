@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:govstart_ai;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+    show-sql: false
+
+  flyway:
+    enabled: false
+    locations: classpath:db/migration
+
+govstart:
+  jwt:
+    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    expiration-ms: 86400000
+  ai-service:
+    url: http://localhost:8000
+    internal-key: govstart-internal-ai-secret-2026
+    timeout-ms: 5000
+  admin-bootstrap:
+    secret: GovStartBootstrapKey2026Secure
