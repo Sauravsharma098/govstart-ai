@@ -4,7 +4,11 @@
 
 GovStart AI is an AI-powered government business opportunity network designed for Indian startups, MSMEs, established suppliers, procurement consultants, and public sector procurement officers.
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Sauravsharma098/govstart-ai&root=govstart-app&project-name=govstart-ai&repository-name=govstart-ai)
+[![GitHub](https://img.shields.io/badge/GitHub-Sauravsharma098%2Fgovstart--ai-blue?logo=github)](https://github.com/Sauravsharma098/govstart-ai)
+
 ---
+
 
 ## 🌟 Key Features
 
