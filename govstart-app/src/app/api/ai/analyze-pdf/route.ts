@@ -7,6 +7,36 @@ import {
 import { TenderAnalysisResultSchema } from '@/lib/schemas/analysis-schema';
 import { MOCK_STARTUPS } from '@/lib/data/mock-data';
 
+// Vercel service binding: AI_SERVICE_URL is injected at runtime when ai-service is bound.
+// Falls back gracefully to in-process TypeScript logic when not set (local dev, non-Vercel).
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL;
+
+/**
+ * Proxy a multipart PDF upload to the Python FastAPI ai-service.
+ * Used only when AI_SERVICE_URL is available (Vercel service binding).
+ */
+async function proxyToAiService(request: Request): Promise<NextResponse | null> {
+  if (!AI_SERVICE_URL) return null;
+  try {
+    const proxyRes = await fetch(new URL('/api/summarize', AI_SERVICE_URL), {
+      method: 'POST',
+      headers: {
+        // Forward content-type (multipart boundary included)
+        'content-type': request.headers.get('content-type') || 'application/octet-stream',
+        'x-internal-token': process.env.INTERNAL_AI_KEY || 'govstart-internal-ai-secret-2026',
+      },
+      body: request.body,
+      // @ts-expect-error — duplex required for streaming body in Node 18+
+      duplex: 'half',
+    });
+    if (!proxyRes.ok) return null; // fall through to local processor on error
+    const data = await proxyRes.json();
+    return NextResponse.json({ success: true, analysis: data.data, source: 'python-ai-service' });
+  } catch {
+    return null; // fall through to local processor
+  }
+}
+
 // Simple in-memory rate limiter per IP / client
 const requestCounts = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_MAX = 30; // 30 requests per minute
@@ -42,8 +72,19 @@ export async function POST(request: Request) {
     );
   }
 
+
   try {
+    // If Vercel service binding is active and this is a multipart PDF upload,
+    // proxy directly to the Python FastAPI ai-service (better native PDF parsing).
+    // Bindings are runtime-only — not available during build.
+    if (AI_SERVICE_URL && request.headers.get('content-type')?.includes('multipart/form-data')) {
+      const proxyResponse = await proxyToAiService(request.clone());
+      if (proxyResponse) return proxyResponse;
+      // null means proxy failed — fall through to TypeScript in-process processor
+    }
+
     const contentType = request.headers.get('content-type') || '';
+
     let rawText = '';
     let fileName = 'Uploaded_Tender_Document.pdf';
     let startupId = 'startup-1';

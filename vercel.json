@@ -1,0 +1,30 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "ai-service": {
+      "root": "ai-service",
+      "framework": "other",
+      "buildCommand": "pip install -r requirements.txt",
+      "installCommand": "pip install -r requirements.txt",
+      "entrypoint": "main:app"
+    },
+    "govstart-app": {
+      "root": "govstart-app",
+      "framework": "nextjs",
+      "bindings": [
+        {
+          "type": "service",
+          "service": "ai-service",
+          "format": "url",
+          "env": "AI_SERVICE_URL"
+        }
+      ]
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": { "service": "govstart-app" }
+    }
+  ]
+}
